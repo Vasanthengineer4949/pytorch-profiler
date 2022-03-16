@@ -1,9 +1,11 @@
 import streamlit as st
 from memoryandexecutioncpugpu.profiler_cpu import cpu
 from memoryandexecutioncpugpu.profiler_gpu import gpu
+import streamlit_tensorboard as sttb
+from stack_trace.trace_stack import trace 
 
 
-opt = st.sidebar.selectbox("Select a page", ["Home","CPU", "GPU", "Next"])
+opt = st.sidebar.selectbox("Select a page", ["Home","CPU", "GPU", "Trace Stack"])
 
 if opt == "Home":
     st.title("PYTORCH PROFILER")
@@ -98,9 +100,25 @@ def gpu():
     st.header("GPU Memory Consumption:")
     st.write(gpu_mem_cons)
 
-elif "Next" in opt:
-    st.title("Pytorch Profiler")
-    st.markdown("In this tutorial we saw how to use Pytorch Profiler for finding ResNet-18's execution time and memory consumption. In the next tutorial we will analyze the stack traces and also we will see how to integrate Profiler with Tensorboard.")
+elif "Trace Stack" in opt:
+    st.title("Pytorch Profiler for Examining Stack Traces")
+    st.markdown("In this tutorial we saw how to use Pytorch Profiler for finding ResNet-18's operators stack trace.")
+    st.code('''
+    def trace():
+    model = models.resnet18().cuda()
+    inputs = torch.randn(5, 3, 224, 224).cuda()
+    with profile(
+        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+        with_stack=True,
+    ) as prof:
+        model(inputs)
+
+    # Print aggregated stats
+    return prof.key_averages(group_by_stack_n=5).table(sort_by="self_cuda_time_total", row_limit=5)
+    ''')
+    stack = trace()
+    st.write(stack)
+
 
     
 
